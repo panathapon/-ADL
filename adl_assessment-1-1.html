@@ -1,0 +1,173 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>แบบประเมิน ADL 10 ข้อ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+  <div class="container mx-auto p-6 max-w-3xl">
+    <h1 class="text-3xl font-bold text-center mb-6">แบบประเมิน ADL 10 ข้อ</h1>
+    <div id="form-container" class="bg-white p-6 rounded-lg shadow-md">
+      <form id="adl-form">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-lg font-medium">1. การรับประทานอาหาร (เมื่อเตรียมอาหารไว้ให้เรียบร้อยต่อหน้า)</label>
+            <select name="adl1" class="w-full p-2 border rounded">
+              <option value="0">0: ไม่สามารถตักอาหารเข้าปากได้ ต้องมีคนป้อนให้</option>
+              <option value="1">1: ตักอาหารเองได้แต่ต้องมีคนช่วย เช่น ช่วยใช้ช้อนตักเตรียมไว้ให้หรือตัดเป็นเล็กๆ ไว้ล่วงหน้า</option>
+              <option value="2">2: ตักอาหารและช่วยตัวเองได้เป็นปกติ</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-lg font-medium">2. การดูแลตนเอง (ล้างหน้า หวีผม แปรงฟัน โกนหนวด ในระยะ 24-28 ชั่วโมงที่ผ่านมา)</label>
+            <select name="adl2" class="w-full p-2 border rounded">
+              <option value="0">0: ต้องการความช่วยเหลือ</option>
+              <option value="1">1: ทำเองได้ (รวมทั้งที่ทำได้เองถ้าเตรียมอุปกรณ์ไว้ให้)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-lg font-medium">3. การเคลื่อนย้าย (ลุกนั่งจากที่นอน หรือจากเตียงไปยังเก้าอี้)</label>
+            <select name="adl3" class="w-full p-2 border rounded">
+              <option value="0">0: ไม่สามารถนั่งได้ (นั่งแล้วจะล้มเสมอ) หรือต้องใช้คนสองคนช่วยกันยกขึ้น</option>
+              <option value="1">1: ต้องการความช่วยเหลืออย่างมาก เช่น ต้องใช้คนที่แข็งแรงหรือมีทักษะ 1 คน หรือใช้คนทั่วไป 2 คนพยุงหรือดันขึ้น</option>
+              <option value="2">2: ต้องการความช่วยเหลือบ้าง เช่น บอกให้ทำตาม หรือช่วยพยุงเล็กน้อย หรือต้องมีคนดูแลเพื่อความปลอดภัย</option>
+              <option value="3">3: ทำได้เอง</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-lg font-medium">4. การใช้ห้องน้ำ</label>
+            <select name="adl4" class="w-full p-2 border rounded">
+              <option value="0">0: ช่วยตัวเองไม่ได้</option>
+              <option value="1">1: ทำเองได้บ้าง (อย่างน้อยทำความสะอาดตัวเองได้หลังจากเสร็จธุระ) แต่ต้องการความช่วยเหลือในบางสิ่ง</option>
+              <option value="2">2: ช่วยตัวเองได้ดี (ขึ้นนั่งและลงจากโถส้วมเองได้ ทำความสะอาดได้เรียบร้อย ถอดใส่เสื้อผ้าได้เรียบร้อย)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-lg font-medium">5. การเคลื่อนที่ (ภายในห้องหรือบ้าน)</label>
+            <select name="adl5" class="w-full p-2 border rounded">
+              <option value="0">0: เคลื่อนที่ไปไหนไม่ได้</option>
+              <option value="1">1: ต้องใช้รถเข็นช่วยตัวเองให้เคลื่อนที่ได้เอง และจะต้องเข้าออกมุมห้องหรือประตูได้</option>
+              <option value="2">2: เดินหรือเคลื่อนที่โดยมีคนช่วย เช่น พยุง หรือบอกให้ทำตาม หรือต้องให้ความสนใจดูแลเพื่อความปลอดภัย</option>
+              <option value="3">3: เดินหรือเคลื่อนที่ได้เอง</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-lg font-medium">6. การสวมใส่เสื้อผ้า</label>
+            <select name="adl6" class="w-full p-2 border rounded">
+              <option value="0">0: ต้องมีคนสวมใส่ให้ ช่วยตัวเองแทบไม่ได้หรือได้น้อย</option>
+              <option value="1">1: ช่วยตัวเองได้ประมาณร้อยละ 50 ที่เหลือต้องมีคนช่วย</option>
+              <option value="2">2: ช่วยตัวเองได้ดี (รวมทั้งการติดกระดุม รูดซิป หรือใช้เสื้อผ้าที่ดัดแปลงให้เหมาะสม)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-lg font-medium">7. การขึ้นลงบันได (1 ชั้น)</label>
+            <select name="adl7" class="w-full p-2 border rounded">
+              <option value="0">0: ไม่สามารถทำได้</option>
+              <option value="1">1: ต้องการคนช่วย</option>
+              <option value="2">2: ขึ้นลงได้เอง (ถ้าต้องใช้เครื่องช่วยเดิน เช่น walker จะต้องเอาขึ้นลงได้ด้วย)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-lg font-medium">8. การอาบน้ำ</label>
+            <select name="adl8" class="w-full p-2 border rounded">
+              <option value="0">0: ต้องมีคนช่วยหรือทำให้</option>
+              <option value="1">1: อาบน้ำเองได้</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-lg font-medium">9. การกลั้นการถ่ายอุจจาระ (ในระยะ 1 สัปดาห์ที่ผ่านมา)</label>
+            <select name="adl9" class="w-full p-2 border rounded">
+              <option value="0">0: กลั้นไม่ได้ หรือต้องการการสวนอุจจาระอยู่เสมอ</option>
+              <option value="1">1: กลั้นไม่ได้บางครั้ง (เป็นน้อยกว่า 1 ครั้งต่อสัปดาห์)</option>
+              <option value="2">2: กลั้นได้เป็นปกติ</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-lg font-medium">10. การกลั้นปัสสาวะ (ในระยะ 1 สัปดาห์ที่ผ่านมา)</label>
+            <select name="adl10" class="w-full p-2 border rounded">
+              <option value="0">0: กลั้นไม่ได้ หรือใส่สายสวนปัสสาวะแต่ไม่สามารถดูแลเองได้</option>
+              <option value="1">1: กลั้นไม่ได้บางครั้ง (เป็นน้อยกว่าวันละ 1 ครั้ง)</option>
+              <option value="2">2: กลั้นได้เป็นปกติ</option>
+            </select>
+          </div>
+        </div>
+        <button type="button" onclick="calculateADL()" class="mt-6 w-full bg-blue-500 text-white p-3 rounded hover:bg-blue-600">คำนวณผล</button>
+      </form>
+      <div id="result" class="mt-6 p-4 bg-gray-100 rounded hidden">
+        <h2 class="text-xl font-bold">ผลการประเมิน</h2>
+        <p id="score" class="text-lg"></p>
+        <p id="interpretation" class="text-lg"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function calculateADL() {
+      const form = document.getElementById('adl-form');
+      const resultDiv = document.getElementById('result');
+      const scoreP = document.getElementById('score');
+      const interpretationP = document.getElementById('interpretation');
+
+      let totalScore = 0;
+      for (let i = 1; i <= 10; i++) {
+        const value = parseInt(form[`adl${i}`].value);
+        totalScore += value;
+      }
+
+      let interpretation = '';
+      if (totalScore >= 12) {
+        interpretation = '1B1280-Special PP (กลุ่มติดสังคม)';
+      } else if (totalScore >= 5) {
+        interpretation = '1B1281-Special PP (กลุ่มติดบ้าน)';
+      } else {
+        interpretation = '1B1282-Special PP (กลุ่มติดเตียง)';
+      }
+
+      scoreP.textContent = `คะแนนรวม: ${totalScore} คะแนน`;
+      interpretationP.textContent = `ผลการแปล: ${interpretation}`;
+      resultDiv.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
